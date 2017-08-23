@@ -1,0 +1,42 @@
+setwd("")
+wd <- getwd()
+dir.create("BlindedImages")	
+
+#install.packages("tiff") #You only need to do this the first time you run the script.
+#install.packages("tools") #You only need to do this the first time you run the script.
+
+library(tiff)
+library(tools) 
+
+files <- dir(pattern = "*.tif") #Put all files in dir which have a .tif extension into a list.
+
+	filesdf <- data.frame(files) 
+				setwd("BlindedImages")
+		write.table(filesdf, "FileNames.csv", row.names=FALSE, col.names=FALSE)
+			FN <- read.csv("FileNames.csv", sep=",", header=FALSE)
+				setwd(wd)
+	NumImg <- nrow(FN)
+		NumImg
+
+CodeNumbers <- sample(1:NumImg, NumImg, replace=F) #Makes a string of random numbers between 1 and n, where n is the number of .tif images in the folder.
+	CNdf <- data.frame(CodeNumbers)
+				setwd("BlindedImages")
+		write.table(CNdf, "CodeNumbers.csv", sep=",", row.names=FALSE, col.names=FALSE)
+				setwd(wd)
+
+	
+ImgCode <- c(filesdf, CNdf) #Make the image code file by binding the string of file names to the string of random numbers.
+	setwd("BlindedImages")
+		write.table(ImgCode, "ImageCode.csv", sep=",", row.names=FALSE, col.names=FALSE)
+	setwd(wd)
+
+#loop through all .tif images and re-name them to the corresponding code number from the "ImageCode.csv" file.	
+	for (i in 1:NumImg) {
+	
+		Image<-readTIFF(files[i])
+					setwd("BlindedImages")
+	CodedName <- CNdf[i,1]
+		writeTIFF(Image, (file = paste (CodedName, ".tif", sep="")))
+					setwd(wd)
+	}
+
