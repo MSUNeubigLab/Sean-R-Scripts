@@ -8,7 +8,7 @@ install.packages("nplr")
 
 #Get the work space all set up. Obviously select your own wd.
 
-setwd("C:/Users/Sean/Desktop/SeanData/Learning R/ADDRC/Multi_Plate_Dose_Response/Sample_Data")
+setwd("")
 library(dplyr)
 library(nplr)
 
