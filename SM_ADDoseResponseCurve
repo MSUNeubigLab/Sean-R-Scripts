@@ -1,0 +1,98 @@
+#ADDoseResponseCurve
+
+#Install packages required for this script. You only need to run this the 1st time.
+
+install.packages("dplyr")
+install.packages("nplr")
+
+
+#Get the work space all set up. Obviously select your own wd.
+
+setwd("C:/Users/Sean/Desktop/SeanData/Learning R/ADDRC/Multi_Plate_Dose_Response/Sample_Data")
+library(dplyr)
+library(nplr)
+
+######Prepare Data and get it all loaded in.
+
+#Load a .csv file which contains all of the compound names in column 1, with no header (e.g. compound 1 starts in cell [1,1] on the .csv
+
+CN <- read.csv("Compound_Names.csv", sep=",", header=F)
+tCN <- t(CN)
+
+
+#Load in raw data files. These files must be in the format that they come in fresh off the plate reader. Once I can see a real dataset, then I can think of a more
+#elegant way to load the files in that does not violate the DRY principle. For now I suppose it is functional.
+
+Data1 <- read.csv("Conc1.csv", sep=",", header=F, na.strings=c("","NA"))
+Data1x <- Data1[39:422,2]
+Data1f <- data.frame(Data1x)
+
+Data2 <- read.csv("Conc2.csv", sep=",", header=F, na.strings=c("","NA"))
+Data2x <- Data2[39:422,2]
+Data2f <- data.frame(Data2x)
+
+Data3 <- read.csv("Conc3.csv", sep=",", header=F, na.strings=c("","NA"))
+Data3x <- Data3[39:422,2]
+Data3f <- data.frame(Data3x)
+
+Data4 <- read.csv("Conc4.csv", sep=",", header=F, na.strings=c("","NA"))
+Data4x <- Data4[39:422,2]
+Data4f <- data.frame(Data4x)
+
+Data5 <- read.csv("Conc5.csv", sep=",", header=F, na.strings=c("","NA"))
+Data5x <- Data5[39:422,2]
+Data5f <- data.frame(Data5x)
+
+
+#Bind files into final dataset
+
+Final_Data <- c(CN, Data1f, Data2f, Data3f, Data4f, Data5f)
+F_Dat_Frame <- data.frame(Final_Data)
+tFDF <- t(F_Dat_Frame)
+
+#Export the dataset, in case you want to do something with it in excel or whatnot.
+write.table(tFDF, "tFDFOutputTest.csv", sep=",", row.names=FALSE, col.names=FALSE)
+
+
+#load in a dataset (in this case, it is the dataset we just exported). You could just use the data.frame directly from R, but I suspect that I will want to add some functionality
+#where a custom final dataset can be loaded in without having the raw plate reader files. So I coded it this way to make it easy to do that in the future.
+
+Data <- read.csv("tFDFOutputTest.csv", sep=",", header=T)
+
+
+#Load in concentration dataset. It is possible to just make this vector in R, but I think that it is more user friendly to have someone put them in a .csv file. That way
+#if someone who isn't comfortable with R wants to use this, but with different concentrations then it may be easier for them. Note that the function does not like a concentration
+#of 0 for the lowest concentration, so you just need to pick a concentration that is very low (e.g 1e10^-15 M). Once I get the plate maps I can make it so it normalizes to DMSO
+#control, I just need to know where those wells are on the plate.
+
+Conc <- read.csv("Concentrations.csv", sep=",", header=T)
+
+#Create/Export Dose Response Curves. This function will loop through all columns in the processed data set, generate a dose response curve for each one (but I have it so it won't
+#display it in R) then export it to your working directory. It is possible to change the way the plot looks, that is something I plan on changing in the future. I want to figure
+#out how to pass the function to ggplot2 so that I can make a very nice looking plot that would rival what you can get from prism.
+
+
+for (i in 1:384){
+
+
+	varx <- Data[,i] #Loop through columns one by one extracting them
+	varxz <- data.frame(varx) #Convert to data frame
+	cpdx <- nplr(x=Conc[,1], y=varxz[,1]) #run nplr to generate the curve
+	CpdName <- tCN[,i] #extract the compound name from the compund name file. This will be used for the graph title and output file name.
+
+png(file = paste (CpdName, ".png", sep=""), bg = "transparent") #open png environment
+
+#generate and export the plot
+
+plot(cpdx, pcol="black", lcol="black", showEstim=.5, showInfl=TRUE,
+main="Default 'nplr' plot", cex.main=1.5)
+x1 <- getX(cpdx); y1 <- getY(cpdx)
+x2 <- getXcurve(cpdx); y2 <- getYcurve(cpdx)
+plot(x1, y1, pch=15, cex=2, col="black", xlab=expression(Log[10](conc)),
+ylab="Relative Viability", main=CpdName, cex.main=1.5)
+lines(x2, y2, lwd=5, col="red") 
+rect(1, 5, 3, 7, col = "white")
+dev.off()
+graphics.off()
+
+}
