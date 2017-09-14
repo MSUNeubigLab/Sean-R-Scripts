@@ -1,0 +1,328 @@
+#This R script calculates the hypergeometric distribution for one gene set of interest and all other MSigDB signatures. It is
+#necessary to download the MSigDB files prior to starting.
+
+library(ggplot2)
+library(dplyr)
+
+setwd('')
+wd <- getwd()
+
+CCG1423 <- read.csv('CCG1423.csv', sep = ",", row.names = 1, header = F)
+ tCCG1423 <- t(CCG1423)
+
+#Load all of the datasets in. You can download these datasets from http://software.broadinstitute.org/gsea/msigdb/collections.jsp
+
+c1 <- read.csv('c1.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc1 <- t(c1)
+		c1F <- read.csv('c1.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c1Names <- c1F[ ,1]
+				c1Ndf <- data.frame(c1Names)
+			
+c2 <- read.csv('c2.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc2 <- t(c2)
+		c2F <- read.csv('c2.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c2Names <- c2F[ ,1]
+				c2Ndf <- data.frame(c1Names)
+			
+c3 <- read.csv('c3.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc3 <- t(c3)
+		c3F <- read.csv('c3.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c3Names <- c3F[ ,1]
+				c3Ndf <- data.frame(c1Names)
+			
+c4 <- read.csv('c4.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc4 <- t(c4)
+		c4F <- read.csv('c4.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c4Names <- c4F[ ,1]
+				c4Ndf <- data.frame(c1Names)
+			
+c5 <- read.csv('c5.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc5 <- t(c5)
+		c5F <- read.csv('c5.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c5Names <- c5F[ ,1]
+				c5Ndf <- data.frame(c1Names)
+			
+c6 <- read.csv('c6.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tc6 <- t(c6)
+		c6F <- read.csv('c6.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			c6Names <- c6F[ ,1]
+				c6Ndf <- data.frame(c1Names)
+			
+hallmark <- read.csv('h.all.v6.0.symbols.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tHallmark <- t(hallmark)
+		hallmarkF <- read.csv('h.all.v6.0.symbols.csv', sep = ",", header = F, as.is=TRUE)
+			hallmarkNames <- hallmarkF[ ,1]
+				hNdf <- data.frame(c1Names)
+			
+Custom <- read.csv('Custom.csv', sep = ",", row.names = 1, header = F, as.is=TRUE)
+ tCustom <- t(Custom)
+		CustomF <- read.csv('Custom.csv', sep = ",", header = F, as.is=TRUE)
+			CustomNames <- CustomF[ ,1]
+				cusNdf <- data.frame(c1Names)
+			
+			
+		
+NumHumanGenes <- 20530
+
+#Make some empty vectors to be used later
+
+pValListC1 <- vector(length=0)
+pValListC2 <- vector(length=0)
+pValListC3 <- vector(length=0)
+pValListC4 <- vector(length=0)
+pValListC5 <- vector(length=0)
+pValListC6 <- vector(length=0)
+pValListCh <- vector(length=0)
+pValListCc <- vector(length=0)
+
+intVecC1 <- vector(length=0)
+intVecC2 <- vector(length=0)
+intVecC3 <- vector(length=0)
+intVecC4 <- vector(length=0)
+intVecC5 <- vector(length=0)
+intVecC6 <- vector(length=0)
+intVecCh <- vector(length=0)
+intVecCc <- vector(length=0)
+
+
+#Loop through all gene sets in a given dataset, and calculate the hypergeometic distribution to get a p-value.
+
+for (i in 1:ncol(tc1)) {
+ SigID <- c1Ndf[i, 1]
+ 
+  St <- tc1[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC1 <- c(intVecC1, intersect)
+			
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC1 <- c(pValListC1, pVal)
+			
+			
+									}
+
+c1Output <- cbind(c1Names, pValListC1, intVecC1) #bind together the signature name, p-value, and the # of overlapping genes. This same code is repeated several times down below because I have not yet had the time to think of a more elegant solution
+write.table(c1Output, "c1Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tc2)) {
+ SigID <- c2Ndf[i, 1]
+ 
+  St <- tc2[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC2 <- c(intVecC2, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC2 <- c(pValListC2, pVal)
+			
+			
+									}
+
+c2Output <- cbind(c2Names, pValListC2, intVecC2)
+write.table(c2Output, "c2Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tc3)) {
+ SigID <- c3Ndf[i, 1]
+ 
+  St <- tc3[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC3 <- c(intVecC3, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC3 <- c(pValListC3, pVal)
+			
+			
+									}
+
+c3Output <- cbind(c3Names, pValListC3, intVecC3)
+write.table(c3Output, "c3Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tc4)) {
+ SigID <- c4Ndf[i, 1]
+ 
+  St <- tc4[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC4 <- c(intVecC4, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC4 <- c(pValListC4, pVal)
+			
+			
+									}
+
+c4Output <- cbind(c4Names, pValListC4, intVecC4)
+write.table(c4Output, "c4Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tc5)) {
+ SigID <- c5Ndf[i, 1]
+ 
+  St <- tc5[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC5 <- c(intVecC5, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC5 <- c(pValListC5, pVal)
+			
+			
+									}
+
+c5Output <- cbind(c5Names, pValListC5, intVecC5)
+write.table(c5Output, "c5Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tc6)) {
+ SigID <- c6Ndf[i, 1]
+ 
+  St <- tc6[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecC6 <- c(intVecC6, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListC6 <- c(pValListC6, pVal)
+			
+			
+									}
+
+c6Output <- cbind(c6Names, pValListC6, intVecC6)
+write.table(c6Output, "c6Output.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tHallmark)) {
+ SigID <- hNdf[i, 1]
+ 
+  St <- tHallmark[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecCh <- c(intVecCh, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListCh <- c(pValListCh, pVal)
+			
+			
+									}
+
+chOutput <- cbind(hallmarkNames, pValListCh, intVecCh)
+write.table(chOutput, "chOutput.csv", sep=",", col.names = F, row.names = F)
+
+for (i in 1:ncol(tCustom)) {
+ SigID <- cusNdf[i, 1]
+ 
+  St <- tCustom[ , i]
+	Signature <- St[ St != "" ]
+  
+		intersect <- length(intersect(Signature, tCCG1423))
+			intVecCc <- c(intVecCc, intersect)
+	
+		
+					if (length(Signature) > length(tCCG1423)){
+						pVal <- sum(dhyper(intersect:length(tCCG1423), length(Signature), NumHumanGenes-length(Signature), length(tCCG1423)))
+							}
+							
+					if (length(tCCG1423) > length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+					if (length(tCCG1423) == length(Signature)){
+						pVal <- sum(dhyper(intersect:length(Signature), length(tCCG1423), NumHumanGenes-length(tCCG1423), length(Signature)))
+							}
+								
+					
+			pValListCc <- c(pValListCc, pVal)
+			
+			
+									}
+
+ccOutput <- cbind(CustomNames, pValListCc, intVecCc)
+write.table(ccOutput, "ccOutput.csv", sep=",", col.names = F, row.names = F)
